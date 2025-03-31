@@ -345,6 +345,7 @@ body {
 
 .content-area {
     width: 100%;
+    min-width: 0; /* Allowed shrinking */
     min-height: 300px; /* Minimum height */
     border: 1px solid #eee;
     border-radius: 4px;
@@ -536,6 +537,56 @@ footer {
     bottom: 0;
     left: 0;
     width: 100%;
+}
+
+/* ========================================
+   Version Classes
+   ======================================== */
+
+.version-history-sidebar {
+    /* Styles for the sidebar container */
+    background-color: #f9f9f9;
+    font-size: 13px;
+}
+.version-history-sidebar h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: #555;
+}
+.version-history-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.version-item {
+    padding: 8px 5px;
+    border-bottom: 1px dashed #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5px;
+}
+.version-item:last-child {
+    border-bottom: none;
+}
+.version-timestamp {
+    color: #333;
+    cursor: default; /* Or make it viewable */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-grow: 1; /* Take up space */
+}
+.revert-button {
+    /* Use existing .button.small.secondary styles */
+    flex-shrink: 0; /* Prevent shrinking */
+}
+
+.no-versions, .loading-versions {
+     color: #888;
+     font-style: italic;
+     padding: 10px 5px;
 }
 
 

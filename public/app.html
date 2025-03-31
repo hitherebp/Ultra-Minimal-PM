@@ -42,17 +42,21 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <input type="text" id="documentTitle" placeholder="Document Title" class="title-input">
-                        <button id="closeEditorButton" class="close-button" aria-label="Close editor">&times;</button>
+                        <button id="closeEditorButton" class="close-button" aria-label="Close editor">×</button>
                     </div>
-                    <div class="modal-body">
-                        <textarea id="documentContent" placeholder="Start typing your document content here..." class="content-area"></textarea>
+                    <div class="modal-body" style="display: flex; gap: 15px;"> <!-- Use flex to arrange side-by-side -->
+                        <textarea id="documentContent" placeholder="Start typing your document content here..." class="content-area" style="flex-grow: 1;"></textarea>
+                        <!-- NEW: Version History Sidebar -->
+                        <aside id="versionListContainer" class="version-history-sidebar" style="width: 200px; border-left: 1px solid #eee; padding-left: 15px; overflow-y: auto;">
+                            <!-- Versions will be loaded here by ui.js -->
+                            <p class="loading-versions">Loading versions...</p>
+                        </aside>
                     </div>
                     <div class="modal-footer">
                         <span id="saveStatus" class="save-status"></span>
                         <button id="saveDocButton" class="button primary">Save</button>
                     </div>
                 </div>
-            </div>
 
             <!-- Confirmation Dialog (for delete) -->
             <div id="confirmDialog" class="modal"> <!-- Start without 'active' class -->

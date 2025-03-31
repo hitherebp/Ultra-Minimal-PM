@@ -1,217 +1,265 @@
-/**
- * Module for handling UI updates and interactions.
- */
+// public/js/ui.js
 
-const ui = (() => {
+const uiModule = (() => {
+    // --- DOM Element Selectors ---
+    const toastElement = document.getElementById('statusToast');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const documentListContainer = document.getElementById('documentList');
+    const userEmailSpan = document.getElementById('userEmail');
 
-    // Cache DOM elements to avoid repeated lookups
-    const elements = {
-        userEmail: document.getElementById('userEmail'),
-        loadingIndicator: document.getElementById('loadingIndicator'),
-        documentList: document.getElementById('documentList'),
-        editorModal: document.getElementById('editorModal'),
-        documentTitleInput: document.getElementById('documentTitle'),
-        documentContentInput: document.getElementById('documentContent'),
-        saveStatus: document.getElementById('saveStatus'),
-        confirmDialog: document.getElementById('confirmDialog'),
-        confirmMessage: document.getElementById('confirmMessage'),
-        statusToast: document.getElementById('statusToast')
-    };
+    // Editor Modal Elements
+    const editorModal = document.getElementById('editorModal');
+    const documentTitleInput = document.getElementById('documentTitle');
+    const documentContentInput = document.getElementById('documentContent');
+    const saveStatusSpan = document.getElementById('saveStatus');
+    const closeEditorButton = document.getElementById('closeEditorButton');
+    const saveDocButton = document.getElementById('saveDocButton');
+    const versionListContainer = document.getElementById('versionListContainer'); // For versions
 
-    let toastTimeout = null; // Store timeout ID for the toast
+    // Confirmation Dialog Elements
+    const confirmDialog = document.getElementById('confirmDialog');
+    const confirmTitle = document.getElementById('confirmTitle');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const confirmButton = document.getElementById('confirmButton');
+    const cancelButton = document.getElementById('cancelButton');
+    const closeConfirmButton = document.getElementById('closeConfirmButton');
 
-    /**
-     * Updates the user email display in the header.
-     * @param {firebase.User} user - The currently logged-in user object.
-     */
-    function updateUserDisplay(user) {
-        if (elements.userEmail) {
-            elements.userEmail.textContent = user.email || 'User';
-            elements.userEmail.title = user.email; // Tooltip for potentially truncated email
-        }
-    }
+    let toastTimeout = null; // To manage the toast timer
 
-    /**
-     * Shows or hides the main loading indicator.
-     * @param {boolean} isLoading - True to show, false to hide.
-     */
-    function setLoading(isLoading) {
-        if (elements.loadingIndicator) {
-            elements.loadingIndicator.classList.toggle('hidden', !isLoading);
-        }
-         // Optionally hide document list while loading initial data
-         if (elements.documentList) {
-              elements.documentList.classList.toggle('hidden', isLoading);
-         }
-    }
-
-    /**
-     * Renders the list of documents in the UI.
-     * @param {Array<object>} docs - Array of document objects {id, title, updatedAt, ...}.
-     */
-    function renderDocumentList(docs) {
-        if (!elements.documentList) return;
-        elements.documentList.innerHTML = ''; // Clear existing list
-
-        if (docs.length === 0) {
-            elements.documentList.innerHTML = '<p>No documents found. Create one!</p>';
-            return;
-        }
-
-        docs.forEach(doc => {
-            const item = document.createElement('div');
-            item.classList.add('document-item');
-            item.dataset.id = doc.id; // Store ID on the element
-
-            const updatedDate = doc.updatedAt?.toDate ? doc.updatedAt.toDate().toLocaleString() : 'N/A';
-
-            item.innerHTML = `
-                <div class="document-info" title="Click to edit '${doc.title}'">
-                    <span class="document-title">${doc.title || 'Untitled Document'}</span>
-                    <span class="document-meta">Last updated: ${updatedDate}</span>
-                </div>
-                <div class="document-actions">
-                    <button class="action-button edit-button" title="Edit Document">&#9998;</button> <!-- Pencil icon -->
-                    <button class="action-button delete-button" title="Delete Document">&#128465;</button> <!-- Trash can icon -->
-                </div>
-            `;
-            elements.documentList.appendChild(item);
-        });
-    }
-
-     /**
-     * Removes a document item from the list UI based on its ID.
-     * @param {string} docId - The ID of the document to remove.
-     */
-    function removeDocumentFromList(docId) {
-        const item = elements.documentList?.querySelector(`.document-item[data-id="${docId}"]`);
-        if (item) {
-            item.remove();
-             // Check if list becomes empty
-            if (elements.documentList.children.length === 0) {
-                elements.documentList.innerHTML = '<p>No documents found. Create one!</p>';
-            }
-        }
-    }
-
-    /**
-     * Opens the document editor modal. Optionally pre-fills title and content.
-     * @param {string} [title=''] - Optional title to pre-fill.
-     * @param {string} [content=''] - Optional content to pre-fill.
-     */
-    function openEditor(title = '', content = '') {
-        if (!elements.editorModal) return;
-        elements.documentTitleInput.value = title;
-        elements.documentContentInput.value = content;
-        updateSaveStatus(''); // Clear status on open
-        elements.editorModal.classList.add('active');
-        elements.documentTitleInput.focus(); // Focus title input
-    }
-
-    /**
-     * Closes the document editor modal.
-     */
-    function closeEditor() {
-        if (elements.editorModal) {
-            elements.editorModal.classList.remove('active');
-            // Clear fields after closing animation might be smoother?
-            // setTimeout(() => {
-            //      elements.documentTitleInput.value = '';
-            //      elements.documentContentInput.value = '';
-            // }, 300); // Match transition duration
-        }
-    }
-
-    /**
-     * Updates the save status message in the editor footer.
-     * @param {string} statusText - The text to display (e.g., 'Saving...', 'Saved', 'Unsaved changes').
-     */
-    function updateSaveStatus(statusText) {
-        if (elements.saveStatus) {
-            elements.saveStatus.textContent = statusText;
-        }
-    }
-
-    /**
-     * Opens the confirmation dialog.
-     * @param {string} docId - The ID of the document being considered for action (stored on dialog).
-     * @param {string} message - The confirmation message to display.
-     */
-    function openConfirmDialog(docId, message) {
-        if (!elements.confirmDialog) return;
-        elements.confirmDialog.dataset.docId = docId; // Store docId for confirmation handler
-        elements.confirmMessage.textContent = message;
-        elements.confirmDialog.classList.add('active');
-    }
-
-    /**
-     * Closes the confirmation dialog.
-     */
-    function closeConfirmDialog() {
-        if (elements.confirmDialog) {
-            elements.confirmDialog.classList.remove('active');
-             // Reset button state if needed
-             setButtonLoading(document.getElementById('confirmButton'), false);
-        }
-    }
-
-    /**
-     * Shows a status toast message at the bottom of the screen.
-     * @param {string} message - The message to display.
-     * @param {boolean} [isError=false] - If true, styles the toast as an error.
-     * @param {number} [duration=3000] - How long the toast stays visible in milliseconds.
-     */
+    // --- Toast Notifications ---
     function showToast(message, isError = false, duration = 3000) {
-        if (!elements.statusToast) return;
+        if (!toastElement) return;
 
-        elements.statusToast.textContent = message;
-        elements.statusToast.classList.toggle('error', isError); // Add/remove error class
-        elements.statusToast.classList.add('visible');
+        toastElement.textContent = message;
+        toastElement.className = 'status-toast'; // Reset classes
+        if (isError) {
+            toastElement.classList.add('error');
+        }
+        toastElement.classList.add('visible');
 
         // Clear existing timeout if any
         if (toastTimeout) {
             clearTimeout(toastTimeout);
         }
 
-        // Set timeout to hide the toast
+        // Set new timeout to hide
         toastTimeout = setTimeout(() => {
-            elements.statusToast.classList.remove('visible');
-            toastTimeout = null; // Clear the timeout ID
+            toastElement.classList.remove('visible');
+            toastTimeout = null; // Reset timeout variable
         }, duration);
     }
 
-    /**
-     * Toggles a loading state on a button (disables and optionally shows spinner).
-     * @param {HTMLButtonElement} button - The button element.
-     * @param {boolean} isLoading - True to set loading state, false to reset.
-     */
-    function setButtonLoading(button, isLoading) {
-         if (!button) return;
-         button.disabled = isLoading;
-         // Optional: Add/remove a spinner or change text
-         // if (isLoading) {
-         //    button.dataset.originalText = button.innerHTML;
-         //    button.innerHTML = '<span class="spinner-small"></span> Loading...'; // Needs CSS for spinner-small
-         // } else if (button.dataset.originalText) {
-         //    button.innerHTML = button.dataset.originalText;
-         // }
+    // --- Loading Indicator ---
+    function showLoading(message = 'Loading...') {
+        if (!loadingIndicator) return;
+        const messageElement = loadingIndicator.querySelector('p');
+        if (messageElement) messageElement.textContent = message;
+        loadingIndicator.classList.remove('hidden');
     }
 
+    function hideLoading() {
+        if (!loadingIndicator) return;
+        loadingIndicator.classList.add('hidden');
+    }
 
-    // Public interface for the module
+    // --- User Info Display ---
+    function updateUserInfo(email) {
+        if (userEmailSpan) {
+            userEmailSpan.textContent = email || 'Not logged in';
+            userEmailSpan.title = email ? `Logged in as ${email}` : '';
+        }
+    }
+
+    // --- Document List Display ---
+    function displayDocuments(docs) {
+        if (!documentListContainer) return;
+        hideLoading(); // Ensure loading indicator is hidden
+
+        if (!docs || docs.length === 0) {
+            documentListContainer.innerHTML = '<p>No documents found. Create one!</p>';
+            documentListContainer.classList.remove('hidden'); // Show the container even if empty
+            return;
+        }
+
+        let docsHtml = '';
+        docs.forEach(doc => {
+            // Format timestamp (handle potential server timestamps)
+            let updatedDateStr = 'N/A';
+            if (doc.lastUpdated && doc.lastUpdated.toDate) {
+                updatedDateStr = doc.lastUpdated.toDate().toLocaleString();
+            } else if (doc.lastUpdated) {
+                // Fallback if it's already a string or number? Adjust as needed.
+                 try { updatedDateStr = new Date(doc.lastUpdated).toLocaleString(); } catch (e) {}
+            }
+
+            docsHtml += `
+                <div class="document-item" data-doc-id="${doc.id}">
+                    <div class="document-info">
+                        <span class="document-title">${doc.title || 'Untitled Document'}</span>
+                        <span class="document-meta">Last updated: ${updatedDateStr}</span>
+                    </div>
+                    <div class="document-actions">
+                         <!-- Use specific class for delete -->
+                        <button class="action-button delete-button" title="Delete Document" data-doc-id="${doc.id}" aria-label="Delete Document">
+                            🗑️
+                        </button>
+                         <!-- Edit button is implicit by clicking document-info -->
+                    </div>
+                </div>
+            `;
+        });
+
+        documentListContainer.innerHTML = docsHtml;
+        documentListContainer.classList.remove('hidden'); // Ensure it's visible
+    }
+
+    // --- Editor Modal ---
+    function openEditor(doc = { id: null, title: '', content: '' }) {
+        if (!editorModal || !documentTitleInput || !documentContentInput || !saveStatusSpan || !saveDocButton || !versionListContainer) {
+             console.error("Editor elements not found!");
+             return;
+        }
+        // Store current doc id using a data attribute on the modal itself
+        editorModal.dataset.docId = doc.id || '';
+
+        documentTitleInput.value = doc.title || '';
+        documentContentInput.value = doc.content || '';
+        saveStatusSpan.textContent = ''; // Clear status on open
+        saveDocButton.disabled = false; // Ensure save is enabled
+
+        // Clear previous versions and show loading state
+        versionListContainer.innerHTML = '<p class="loading-versions">Loading versions...</p>';
+
+        editorModal.classList.add('active');
+        documentTitleInput.focus(); // Focus title input
+    }
+
+    function closeEditor() {
+        if (!editorModal) return;
+        editorModal.classList.remove('active');
+        editorModal.dataset.docId = ''; // Clear the stored document ID
+        // Optional: Clear the form fields
+        // documentTitleInput.value = '';
+        // documentContentInput.value = '';
+        // Clear versions list when closing
+        if (versionListContainer) versionListContainer.innerHTML = '';
+        saveStatusSpan.textContent = ''; // Clear status
+    }
+
+    function setSaveStatus(status) {
+        if (saveStatusSpan) {
+            saveStatusSpan.textContent = status;
+        }
+    }
+
+    // --- NEW: Update Editor Content (e.g., after revert) ---
+    function updateEditorContent(title, content) {
+         if(documentTitleInput) documentTitleInput.value = title;
+         if(documentContentInput) documentContentInput.value = content;
+         // Optionally update status or clear it
+         // setSaveStatus('Reverted. Save if you wish to keep changes.');
+    }
+
+    // --- NEW: Display Versions in Editor ---
+    function displayVersions(versions) {
+        if (!versionListContainer) return;
+
+        if (!versions || versions.length === 0) {
+            versionListContainer.innerHTML = '<p class="no-versions">No previous versions found.</p>';
+            return;
+        }
+
+        let versionsHtml = '<h4>Previous Versions:</h4><ul>';
+        versions.forEach(version => {
+            // Safely format timestamp
+            let formattedDate = 'Unknown date';
+            try {
+                 if (version.timestamp && version.timestamp.toDate) {
+                     formattedDate = version.timestamp.toDate().toLocaleString();
+                 } else if (version.timestamp) {
+                     formattedDate = new Date(version.timestamp).toLocaleString();
+                 }
+            } catch (e) { console.warn("Error formatting version date:", e); }
+
+
+            // Use textContent to prevent XSS if title comes from user input
+            const safeTitle = version.title || 'Untitled';
+
+            versionsHtml += `
+                <li class="version-item" data-version-id="${version.id}">
+                    <span class="version-timestamp" title="${escapeHtml(safeTitle)}">${formattedDate}</span>
+                    <button class="button small secondary revert-button" data-version-id="${version.id}" aria-label="Revert to this version">Revert</button>
+                    <!-- Optional: Add a 'View' button later -->
+                </li>
+            `;
+        });
+        versionsHtml += '</ul>';
+        versionListContainer.innerHTML = versionsHtml;
+    }
+
+    // --- Confirmation Dialog ---
+    function showConfirmation(title, message, onConfirmCallback) {
+        if (!confirmDialog || !confirmTitle || !confirmMessage || !confirmButton || !cancelButton || !closeConfirmButton) {
+            console.error("Confirmation dialog elements not found!");
+            return;
+        }
+
+        confirmTitle.textContent = title;
+        confirmMessage.textContent = message;
+
+        // Important: Remove previous listeners to avoid multiple executions
+        const newConfirmButton = confirmButton.cloneNode(true);
+        confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+        //confirmButton = newConfirmButton; // Update reference if needed globally, though direct assignment below is fine
+
+        const newCancelButton = cancelButton.cloneNode(true);
+        cancelButton.parentNode.replaceChild(newCancelButton, cancelButton);
+        //cancelButton = newCancelButton;
+
+         const newCloseConfirmButton = closeConfirmButton.cloneNode(true);
+        closeConfirmButton.parentNode.replaceChild(newCloseConfirmButton, closeConfirmButton);
+        //closeConfirmButton = newCloseConfirmButton;
+
+
+        // Add new listeners
+        const closeHandler = () => confirmDialog.classList.remove('active');
+
+        newConfirmButton.onclick = () => {
+            closeHandler();
+            if (typeof onConfirmCallback === 'function') {
+                onConfirmCallback();
+            }
+        };
+        newCancelButton.onclick = closeHandler;
+        newCloseConfirmButton.onclick = closeHandler;
+
+
+        confirmDialog.classList.add('active');
+    }
+
+    // --- Utility: Simple HTML Escaping ---
+    function escapeHtml(unsafe) {
+        if (!unsafe) return '';
+        return unsafe
+             .replace(/&/g, "&")
+             .replace(/</g, "<")
+             .replace(/>/g, ">")
+             .replace(/"/g, """)
+             .replace(/'/g, "'");
+     }
+
+    // --- Public API ---
     return {
-        updateUserDisplay,
-        setLoading,
-        renderDocumentList,
-        removeDocumentFromList,
+        showToast,
+        showLoading,
+        hideLoading,
+        updateUserInfo,
+        displayDocuments,
         openEditor,
         closeEditor,
-        updateSaveStatus,
-        openConfirmDialog,
-        closeConfirmDialog,
-        showToast,
-        setButtonLoading
+        setSaveStatus,
+        updateEditorContent, // Expose function to update editor fields
+        displayVersions,     // Expose function to show versions
+        showConfirmation
     };
-
-})(); // Immediately invoke to create the ui object
-
+})();

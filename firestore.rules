@@ -1,9 +1,22 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /documents/{document} {
+    // Rules for the main document
+    match /documents/{docId} {
       allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+
+     // Rules for the versions subcollection
+     match /versions/{versionId} {
+       // Allow reading versions if user can read the parent document
+       allow read: if request.auth != null && get(/databases/$(database)/documents/documents/$(docId)).data.userId == request.auth.uid;
+       // Allow creating versions if user owns the parent document (our app logic will do this)
+       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId; // Add userId to version docs
+       // Allow deleting versions if user owns the parent document (our app logic needs this for trimming)
+       allow delete: if request.auth != null && get(/databases/$(database)/documents/documents/$(docId)).data.userId == request.auth.uid;
+       // Updates to versions generally shouldn't happen, but allow if needed for some reason
+       // allow update: if false;
+     }
     }
   }
 }
