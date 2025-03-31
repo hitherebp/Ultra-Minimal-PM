@@ -1,0 +1,40 @@
+{
+  "hosting": {
+    "public": "public",  // Serve files from the 'public' directory
+    "ignore": [
+      "firebase.json",    // Ignore self
+      "firestore.rules",  // Ignore rules file itself
+      "firestore.indexes.json", // Ignore indexes file
+      "README.md",        // Ignore README
+      "LICENSE",          // Ignore LICENSE
+      ".gitignore",       // Ignore gitignore
+      "**/.*",            // Ignore hidden files/folders (like .git)
+      "**/node_modules/**" // Ignore node_modules
+    ]
+    // Optional: Add rewrites if evolving into a single-page app
+    // "rewrites": [
+    //   {
+    //     "source": "**",
+    //     "destination": "/index.html"
+    //   }
+    // ]
+  },
+  "firestore": {
+    "rules": "firestore.rules", // Path relative to project root
+    "indexes": "firestore.indexes.json" // Path relative to project root
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "hosting": {
+      "port": 5002
+    },
+    "ui": {
+      "enabled": true
+    }
+  }
+}

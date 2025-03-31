@@ -1,0 +1,23 @@
+# Firebase SDK configuration inside the public directory
+public/js/config.js
+
+# Firebase hosting cache and logs
+.firebase/
+*.log
+firebase-debug.log
+firebase-debug.*.log
+
+# Node modules (if you add build tools)
+node_modules/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore custom 'other' directory and all its contents
+other/
+
+# Add any other specific files or patterns you want to ignore below
+# e.g., sensitive_file.txt
+# e.g., *.tmp
+.*code-workspace

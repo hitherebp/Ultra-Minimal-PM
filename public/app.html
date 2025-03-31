@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra-Minimal PM | Documents</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="app-page"> <!-- Assuming app-page class exists or add base styles -->
+    <div class="container">
+        <!-- Header Section -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1>Ultra-Minimal PM</h1>
+                <div class="user-controls">
+                    <span id="userEmail" title="Logged in user">Loading...</span> <!-- Placeholder text -->
+                    <button id="logoutButton" class="button small secondary">Logout</button> <!-- Style adjusted -->
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <!-- Action Bar -->
+            <div class="app-actions">
+                <h2>My Documents</h2>
+                <button id="newDocButton" class="button primary">+ New Document</button>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="loading-indicator hidden"> <!-- Start hidden -->
+                <div class="spinner"></div>
+                <p>Loading...</p> <!-- Generic message, updated by JS if needed -->
+            </div>
+
+            <!-- Document List Container -->
+            <div id="documentList" class="document-list hidden"> <!-- Start hidden until loaded -->
+                <!-- Document items will be dynamically inserted here by js/ui.js -->
+            </div>
+
+            <!-- Document Editor Modal -->
+            <div id="editorModal" class="modal"> <!-- Start without 'active' class -->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <input type="text" id="documentTitle" placeholder="Document Title" class="title-input">
+                        <button id="closeEditorButton" class="close-button" aria-label="Close editor">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <textarea id="documentContent" placeholder="Start typing your document content here..." class="content-area"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <span id="saveStatus" class="save-status"></span>
+                        <button id="saveDocButton" class="button primary">Save</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirmation Dialog (for delete) -->
+            <div id="confirmDialog" class="modal"> <!-- Start without 'active' class -->
+                <div class="modal-content confirmation-dialog">
+                    <div class="modal-header">
+                        <h3 id="confirmTitle">Confirm Action</h3>
+                         <button id="closeConfirmButton" class="close-button" aria-label="Close confirmation">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="confirmMessage">Are you sure?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="cancelButton" class="button secondary">Cancel</button>
+                        <button id="confirmButton" class="button danger">Confirm</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+         <footer>
+            <p>&copy; 2025 Ultra-Minimal PM</p>
+        </footer>
+
+    </div> <!-- End container -->
+
+    <!-- Status Message Toast (Outside container for fixed positioning) -->
+    <div id="statusToast" class="status-toast">
+        <!-- Message content set via JS -->
+    </div>
+
+    <!-- Firebase SDK Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+
+    <!-- Firebase Configuration -->
+    <script src="js/config.js"></script>
+
+    <!-- Application Modules -->
+    <script src="js/auth.js"></script>      <!-- NEW: Load Auth module -->
+    <script src="js/ui.js"></script>        <!-- Load UI module -->
+    <script src="js/documents.js"></script> <!-- Load Documents module -->
+    <script src="js/app.js"></script>        <!-- Load Main App Controller (depends on others) -->
+
+</body>
+</html>

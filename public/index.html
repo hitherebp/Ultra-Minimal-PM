@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra-Minimal PM | Welcome</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="landing-page">
+    <div class="container">
+        <header>
+            <h1>Ultra-Minimal Project Management</h1>
+            <p>Simple. Effective. Minimal.</p>
+        </header>
+        <main>
+            <div class="card">
+                <h2>Get Started</h2>
+                <p>Manage your projects without the bloat. Sign in or register with your Google account.</p>
+                <div class="button-group">
+                    <a href="login.html" class="button primary">Login / Register with Google</a>
+                </div>
+            </div>
+        </main>
+        <footer>
+            <p>© 2025 Ultra-Minimal PM</p>
+        </footer>
+    </div>
+
+    <!-- Firebase Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+
+    <!-- Firebase Configuration -->
+    <script src="js/config.js"></script>
+
+    <!-- Auth Module -->
+    <script src="js/auth.js"></script> <!-- Include auth module -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+             // Basic checks for Firebase/Config/Auth Module
+             if (typeof firebase === 'undefined' || typeof window.firebaseConfig === 'undefined' || typeof authModule === 'undefined' || window.firebaseConfig.apiKey.startsWith("YOUR_")) {
+                 console.warn('Setup incomplete on index page. Auth redirect check skipped.');
+                 return;
+             }
+             try {
+                 // Initialize auth module (which ensures app is initialized)
+                 authModule.initFirebaseAuth();
+
+                 // Use auth module to check state for redirect
+                 authModule.onAuthStateChange((user, error) => {
+                    if (error) {
+                         console.error("Error checking initial auth state on index page:", error);
+                         // Don't redirect on error, let user proceed to login
+                         return;
+                     }
+                     if (user) {
+                         console.log('User logged in, redirecting from index to app.html');
+                         window.location.replace('app.html');
+                     } else {
+                         console.log('User not logged in, showing landing page.');
+                     }
+                 });
+             } catch (error) {
+                  console.error('Error during init/auth check on index page:', error);
+             }
+        });
+    </script>
+</body>
+</html>

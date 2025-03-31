@@ -1,0 +1,547 @@
+/* ========================================
+   Base Styles & Reset
+   ======================================== */
+   * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5; /* Light grey background */
+    min-height: 100vh; /* Ensure body takes full height */
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px; /* Add horizontal padding */
+}
+
+/* ========================================
+   Header Styles
+   ======================================== */
+.app-header {
+    background-color: #333; /* Dark background */
+    color: white;
+    padding: 15px 0;
+    margin-bottom: 30px;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px; /* Match container width */
+    margin: 0 auto;
+    padding: 0 20px; /* Consistent padding */
+}
+
+.header-content h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 500; /* Slightly lighter weight */
+}
+
+.user-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Space between email and button */
+}
+
+#userEmail { /* Style for user email display */
+    font-size: 14px;
+    color: #f0f0f0; /* Lighter text color */
+    white-space: nowrap; /* Prevent wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Add ellipsis if too long */
+    max-width: 200px; /* Adjust as needed */
+}
+
+/* ========================================
+   Button Styles
+   ======================================== */
+.button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500; /* Slightly bolder text */
+    transition: background-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+    text-decoration: none; /* For anchor tags styled as buttons */
+    display: inline-block; /* Ensure anchors behave like buttons */
+    text-align: center;
+    line-height: 1.4; /* Adjust line height for vertical centering */
+}
+.button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.button:hover:not(:disabled) {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle hover shadow */
+}
+
+.button.primary {
+    background-color: #4CAF50; /* Green */
+    color: white;
+}
+
+.button.primary:hover:not(:disabled) {
+    background-color: #45a049; /* Darker green */
+}
+
+.button.secondary {
+    background-color: #f1f1f1; /* Light grey */
+    color: #333;
+    border: 1px solid #ddd; /* Subtle border */
+}
+
+.button.secondary:hover:not(:disabled) {
+    background-color: #e7e7e7; /* Slightly darker grey */
+}
+
+.button.danger {
+    background-color: #f44336; /* Red */
+    color: white;
+}
+
+.button.danger:hover:not(:disabled) {
+    background-color: #d32f2f; /* Darker red */
+}
+
+.button.small {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+.button.full-width {
+     width: 100%;
+     padding: 12px;
+     font-size: 16px;
+}
+
+.button-group {
+    margin-top: 20px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+/* ========================================
+   App Actions Bar (app.html)
+   ======================================== */
+.app-actions {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px 15px; /* Adjust padding */
+    background-color: #fff; /* White background */
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    gap: 10px; /* Space between items if they wrap */
+}
+
+.app-actions h2 {
+    font-size: 20px;
+    font-weight: 500;
+    margin: 0; /* Remove default margin */
+}
+
+/* ========================================
+   Document List Styles (app.html)
+   ======================================== */
+.document-list {
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden; /* Contain borders */
+    margin-bottom: 30px; /* Space below list */
+}
+
+.document-item {
+    padding: 15px;
+    border-bottom: 1px solid #eee; /* Separator line */
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* Align items to top */
+    gap: 15px; /* Space between info and actions */
+}
+
+.document-item:last-child {
+    border-bottom: none; /* No border for the last item */
+}
+.document-list p { /* Message for empty list */
+     padding: 20px;
+     text-align: center;
+     color: #666;
+}
+
+.document-info {
+    flex: 1; /* Take available space */
+    overflow: hidden; /* Prevent long titles from breaking layout */
+    cursor: pointer; /* Indicate the whole info area is clickable */
+}
+
+.document-title {
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: #333;
+    transition: color 0.2s;
+    display: block; /* Ensure title takes full width */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.document-info:hover .document-title {
+    color: #4CAF50; /* Highlight on hover */
+}
+
+.document-meta {
+    font-size: 12px;
+    color: #666; /* Grey text for metadata */
+}
+
+.document-actions {
+    display: flex;
+    gap: 5px; /* Space between action buttons */
+    flex-shrink: 0; /* Prevent action buttons from shrinking */
+}
+
+.action-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    font-size: 16px; /* Icon size */
+    padding: 5px; /* Make clickable area larger */
+    transition: color 0.2s;
+    line-height: 1; /* Ensure icons align well */
+}
+
+.action-button:hover:not(:disabled) {
+    color: #333; /* Darken icon on hover */
+}
+
+/* ========================================
+   Loading Indicator
+   ======================================== */
+.loading-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    text-align: center;
+    color: #666;
+}
+.loading-indicator.hidden { /* Use hidden class to control visibility */
+    display: none;
+}
+
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1); /* Light grey track */
+    border-top: 4px solid #4CAF50; /* Green spinner */
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ========================================
+   Modal Styles (Editor & Confirmation)
+   ======================================== */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Darker background */
+    z-index: 1000; /* Ensure modal is on top */
+    justify-content: center;
+    align-items: center;
+    padding: 20px; /* Padding for smaller screens */
+    opacity: 0; /* Start transparent */
+    transition: opacity 0.3s ease; /* Fade transition */
+}
+
+.modal.active {
+    display: flex; /* Use flex for centering */
+    opacity: 1; /* Fade in */
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); /* Stronger shadow */
+    width: 100%; /* Full width within padding */
+    max-width: 800px; /* Max width for editor */
+    max-height: 90vh; /* Limit height */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Prevent content overflow */
+    transform: scale(0.95); /* Start slightly smaller */
+    transition: transform 0.3s ease; /* Scale transition */
+}
+.modal.active .modal-content {
+     transform: scale(1); /* Scale up when active */
+}
+
+
+.modal-header {
+    padding: 15px 20px; /* More padding */
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0; /* Prevent header shrinking */
+}
+
+.title-input {
+    border: none;
+    font-size: 18px;
+    font-weight: 500;
+    width: 100%;
+    outline: none;
+    padding: 5px 0; /* Adjust padding */
+    margin-right: 15px; /* Space before close button */
+    background: transparent; /* Ensure no background */
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 24px; /* Larger close icon */
+    line-height: 1; /* Prevent extra space */
+    cursor: pointer;
+    color: #999; /* Lighter close color */
+    padding: 5px; /* Easier to click */
+    transition: color 0.2s;
+}
+
+.close-button:hover {
+    color: #333;
+}
+
+.modal-body {
+    padding: 20px; /* More padding */
+    flex: 1; /* Allow body to grow */
+    overflow-y: auto; /* Enable scrolling if content exceeds height */
+}
+
+.content-area {
+    width: 100%;
+    min-height: 300px; /* Minimum height */
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 10px 15px; /* Adjust padding */
+    font-family: inherit; /* Use body font */
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical; /* Allow vertical resizing */
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.content-area:focus {
+    border-color: #4CAF50; /* Highlight focus */
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.modal-footer {
+    padding: 15px 20px; /* More padding */
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0; /* Prevent footer shrinking */
+    background-color: #f9f9f9; /* Slightly different background for footer */
+}
+
+.save-status {
+    font-size: 14px;
+    color: #666;
+    transition: opacity 0.3s ease;
+}
+
+/* Confirmation Dialog Specific Styles */
+.confirmation-dialog {
+    max-width: 400px; /* Smaller width for confirmation */
+    padding: 0; /* Remove padding, handled by sections */
+}
+.confirmation-dialog .modal-header {
+    background-color: #f9f9f9;
+    padding: 10px 15px;
+}
+.confirmation-dialog .modal-header h3 {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+}
+.confirmation-dialog .modal-body {
+    padding: 25px 20px; /* Add padding back to body */
+    font-size: 15px;
+    line-height: 1.5;
+}
+.confirmation-dialog .modal-footer {
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 10px;
+}
+
+/* ========================================
+   Status Toast Notification
+   ======================================== */
+.status-toast {
+    position: fixed;
+    bottom: -100px; /* Start off-screen */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(51, 51, 51, 0.9); /* Dark semi-transparent */
+    color: white;
+    padding: 12px 25px; /* More padding */
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1001; /* Above modals if necessary */
+    opacity: 0; /* Hidden by default */
+    transition: opacity 0.3s ease, bottom 0.4s ease; /* Animate opacity and position */
+    pointer-events: none; /* Don't block clicks */
+    font-size: 14px;
+    white-space: nowrap; /* Prevent wrapping */
+}
+.status-toast.error { /* Style for error toasts */
+    background-color: rgba(217, 83, 79, 0.9); /* Reddish background */
+}
+
+.status-toast.visible {
+    opacity: 1;
+    bottom: 30px; /* Animate upwards */
+    pointer-events: auto; /* Allow interaction if needed */
+}
+
+/* ========================================
+   Authentication Page Styles (login.html)
+   ======================================== */
+.auth-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.auth-card {
+    background: white;
+    padding: 30px 40px; /* More padding */
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* Softer shadow */
+    text-align: center;
+    max-width: 400px;
+    width: 100%; /* Take full width up to max-width */
+}
+.auth-card h1 {
+     margin-bottom: 10px;
+     font-size: 24px;
+     font-weight: 500;
+}
+.auth-card h2 {
+     margin-bottom: 10px;
+     font-size: 18px;
+     font-weight: 400;
+     color: #555;
+}
+.auth-card p {
+    margin-bottom: 25px;
+    color: #666;
+    font-size: 15px;
+}
+.auth-form .form-group {
+    margin-bottom: 20px;
+}
+.status-message {
+    margin-top: 20px;
+    padding: 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    text-align: center;
+}
+.status-message.info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+.status-message.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+.status-message.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+/* ========================================
+   Landing Page Styles (index.html)
+   ======================================== */
+.landing-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+}
+.landing-page header h1 {
+    font-size: 32px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #333;
+}
+.landing-page header p {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 40px;
+}
+.landing-page .card { /* Reusing auth-card style */
+    background: white;
+    padding: 30px 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    max-width: 500px;
+    width: 100%;
+}
+.landing-page .card h2 {
+    font-size: 22px;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+.landing-page .card p {
+    margin-bottom: 25px;
+    color: #666;
+    font-size: 16px;
+}
+
+/* Footer styles */
+footer {
+    margin-top: 40px;
+    padding: 20px;
+    text-align: center;
+    color: #888;
+    font-size: 14px;
+}
+.auth-page footer, .landing-page footer {
+    position: absolute; /* Position footer at bottom for these pages */
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+
+/* ========================================
+   Utility Classes
+   ======================================== */
+.hidden {
+    display: none !important; /* Force hide */
+}

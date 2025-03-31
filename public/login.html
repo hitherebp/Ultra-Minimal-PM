@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra-Minimal PM | Login</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+    <div class="container">
+        <main>
+            <div class="auth-card">
+                <h1>Ultra-Minimal PM</h1>
+                <div id="loginForm" class="auth-form">
+                    <h2>Login / Register</h2>
+                    <p>Use your Google account for quick access.</p>
+                    <div class="form-group">
+                        <button id="googleSignInButton" class="button primary full-width" disabled>Sign in with Google</button>
+                        <!-- Add buttons for other providers here later -->
+                    </div>
+                    <div id="statusMessage" class="status-message hidden"></div>
+                </div>
+            </div>
+        </main>
+        <footer>
+            <p>© 2025 Ultra-Minimal PM</p>
+        </footer>
+    </div>
+
+    <!-- Firebase Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+
+    <!-- Firebase Configuration -->
+    <script src="js/config.js"></script>
+
+    <!-- Auth Module -->
+    <script src="js/auth.js"></script> <!-- Load the new auth module -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const googleSignInButton = document.getElementById('googleSignInButton');
+            const statusMessageDiv = document.getElementById('statusMessage');
+
+            // --- UI Helper ---
+            function showStatus(type, message) {
+                // (Keep the showStatus function as defined previously)
+                if (!statusMessageDiv) return;
+                statusMessageDiv.textContent = message;
+                statusMessageDiv.className = `status-message ${type}`;
+                statusMessageDiv.classList.remove('hidden');
+                if (type !== 'error') {
+                     setTimeout(() => {
+                        if (statusMessageDiv.textContent === message) {
+                             statusMessageDiv.classList.add('hidden');
+                        }
+                     }, 5000);
+                }
+            }
+
+            // --- Initialization Check ---
+            // Basic checks for Firebase/Config presence
+            if (typeof firebase === 'undefined' || typeof window.firebaseConfig === 'undefined' || typeof authModule === 'undefined' || window.firebaseConfig.apiKey.startsWith("YOUR_")) {
+                 let errorMsg = "Critical setup error: ";
+                 if (typeof firebase === 'undefined') errorMsg += "Firebase SDK missing. ";
+                 if (typeof window.firebaseConfig === 'undefined' || window.firebaseConfig.apiKey.startsWith("YOUR_")) errorMsg += "Firebase config invalid. ";
+                 if (typeof authModule === 'undefined') errorMsg += "Auth module missing. ";
+                 showStatus('error', errorMsg + "Check console and script includes.");
+                 console.error(errorMsg, "Check HTML script tags and config.js.");
+                 if(googleSignInButton) googleSignInButton.disabled = true;
+                 return;
+            }
+
+            // Attempt to initialize auth (will also init app if needed)
+            authModule.initFirebaseAuth();
+
+            // --- Auth State Check for Redirect ---
+            authModule.onAuthStateChange((user, error) => {
+                if (error) {
+                     console.error("Auth state listener error on login page:", error);
+                     showStatus('error', `Authentication check failed: ${error.message}`);
+                     // Allow login attempt anyway
+                     if (googleSignInButton) googleSignInButton.disabled = false;
+                     return;
+                }
+
+                if (user) {
+                    // Already logged in, redirect to app
+                    console.log('User already signed in, redirecting...');
+                    showStatus('info', 'Already logged in. Redirecting...');
+                    setTimeout(() => window.location.replace('app.html'), 500);
+                } else {
+                    // Not logged in, ensure button is enabled
+                    console.log('No user signed in. Login page ready.');
+                    if (googleSignInButton) googleSignInButton.disabled = false;
+                }
+            });
+
+            // --- Sign In Button Listener ---
+            if (googleSignInButton) {
+                googleSignInButton.addEventListener('click', () => {
+                    googleSignInButton.disabled = true;
+                    showStatus('info', 'Connecting to Google...');
+
+                    // Call the auth module function
+                    authModule.signInWithGoogle()
+                        .then(result => {
+                            // Sign-in successful!
+                            console.log('Sign-in via Google successful.');
+                            showStatus('success', 'Sign-in successful! Redirecting...');
+                            // Redirect will be handled by the onAuthStateChange listener firing
+                        })
+                        .catch(error => {
+                            // Handle sign-in errors
+                            console.error('Google Sign-in error:', error);
+                            let friendlyMessage = `Login failed: ${error.message}`;
+                            // (Keep friendly error message logic from previous version)
+                            if (error.code === 'auth/popup-closed-by-user') friendlyMessage = 'Login cancelled.';
+                            else if (error.code === 'auth/network-request-failed') friendlyMessage = 'Network error. Check connection.';
+                            else if (error.code === 'auth/popup-blocked') friendlyMessage = 'Login popup blocked. Allow popups.';
+                            showStatus('error', friendlyMessage);
+                            googleSignInButton.disabled = false; // Re-enable button
+                        });
+                });
+            } else {
+                 console.error("Google Sign In button not found.");
+                 showStatus('error', 'Login button missing from page.');
+            }
+        });
+    </script>
+</body>
+</html>

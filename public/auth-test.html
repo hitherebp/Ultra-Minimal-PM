@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra-Minimal PM | Auth-Test</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="landing-page">
+    <div class="container">
+        <header>
+            <h1>Ultra-Minimal Project Management</h1>
+            <p>Simple. Effective. Minimal.</p>
+        </header>
+       
+        <footer>
+            <p>© 2025 Ultra-Minimal PM</p>
+        </footer>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script>
+        // Function to update status display
+        function updateStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        // Function to update JSON display
+        function updateJson(elementId, data) {
+            const element = document.getElementById(elementId);
+            element.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Main script
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial status
+            updateStatus('Loading Firebase configuration...', 'info');
+
+            // Get Firebase configuration
+            let firebaseConfig;
+
+            // Attempt to load config from js/config.js (preferred)
+            const script = document.createElement('script');
+            script.src = 'js/config.js'; // This should contain the user's actual config
+            script.async = false; // Load synchronously to ensure config is available
+
+            script.onload = () => {
+                if (typeof window.firebaseConfig !== 'undefined') {
+                    firebaseConfig = window.firebaseConfig;
+                    console.log('Loaded config from js/config.js');
+                    initializeFirebase();
+                } else {
+                    // This condition should ideally not be met if config.js is set up correctly
+                    handleConfigError('window.firebaseConfig not found after loading js/config.js.');
+                }
+            };
+
+            script.onerror = () => {
+                // If js/config.js fails to load (e.g., doesn't exist), use placeholder fallback
+                console.warn('Could not load js/config.js. Using placeholder fallback configuration for testing ONLY.');
+                updateStatus('Could not load js/config.js. Using placeholder fallback. DO NOT DEPLOY WITH THIS.', 'error');
+
+                // --- FALLBACK CONFIGURATION ---
+                // These are PLACEHOLDERS. Real keys should be in js/config.js (which is gitignored)
+                // This fallback is primarily for testing the HTML structure if config.js is missing
+                firebaseConfig = {
+                    apiKey: "YOUR_API_KEY_DO_NOT_COMMIT",
+                    authDomain: "YOUR_AUTH_DOMAIN_DO_NOT_COMMIT",
+                    projectId: "YOUR_PROJECT_ID_DO_NOT_COMMIT",
+                    storageBucket: "YOUR_STORAGE_BUCKET_DO_NOT_COMMIT",
+                    messagingSenderId: "YOUR_MESSAGING_SENDER_ID_DO_NOT_COMMIT",
+                    appId: "YOUR_APP_ID_DO_NOT_COMMIT"
+                };
+                // Initialize Firebase with fallback (useful for demo, but warn user)
+                 initializeFirebase(); // Or display an error telling user to create config.js
+            };
+
+            document.head.appendChild(script);
+
+            function handleConfigError(message) {
+                updateStatus(`Configuration Error: ${message}. Ensure js/config.js exists and contains your Firebase config.`, 'error');
+                updateJson('firebaseStatus', { initialized: false, error: message });
+            }
+
+            function initializeFirebase() {
+                if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("YOUR_")) {
+                     handleConfigError("Firebase configuration is missing or using placeholder values");
+                     return; // Stop initialization if config is bad
+                }
+
+                try {
+                    // Initialize Firebase
+                    // Use firebase.initializeApp only if it hasn't been initialized elsewhere.
+                    let app;
+                    try {
+                         app = firebase.app(); // Check if default app already exists
+                         updateStatus('Firebase already initialized', 'info');
+                    } catch (e) {
+                         app = firebase.initializeApp(firebaseConfig);
+                         updateStatus('Firebase initialized successfully', 'success');
+                    }
+
+                    updateJson('firebaseStatus', {
+                        initialized: true,
+                        name: app.name,
+                        options: app.options // Be cautious about logging full options if sensitive info might leak
+                    });
+
+                    const auth = firebase.auth();
+                    const provider = new firebase.auth.GoogleAuthProvider();
+
+                    // Auth state listener
+                    auth.onAuthStateChanged(user => {
+                        if (user) {
+                            updateStatus('User is signed in', 'success');
+                            updateJson('currentUser', {
+                                uid: user.uid,
+                                email: user.email,
+                                displayName: user.displayName,
+                                photoURL: user.photoURL
+                            });
+                        } else {
+                            updateStatus('No user is signed in', 'info');
+                            updateJson('currentUser', null);
+                        }
+                    });
+
+                    // Sign-in button
+                    document.getElementById('googleSignIn').addEventListener('click', () => {
+                        updateStatus('Signing in with Google...', 'info');
+                        auth.signInWithPopup(provider)
+                            .then(result => {
+                                updateStatus('Sign-in successful!', 'success');
+                                console.log("Sign-in result:", result);
+                            })
+                            .catch(error => {
+                                updateStatus(`Sign-in error: ${error.code} - ${error.message}`, 'error');
+                                console.error('Sign-in error details:', error);
+                            });
+                    });
+
+                    // Sign-out button
+                    document.getElementById('signOut').addEventListener('click', () => {
+                        auth.signOut()
+                            .then(() => {
+                                updateStatus('Signed out successfully', 'success');
+                            })
+                            .catch(error => {
+                                updateStatus(`Sign-out error: ${error.message}`, 'error');
+                                console.error('Sign-out error:', error);
+                            });
+                    });
+
+                } catch (error) {
+                    updateStatus(`Firebase initialization error: ${error.message}`, 'error');
+                    console.error('Firebase initialization error:', error);
+                    updateJson('firebaseStatus', {
+                        initialized: false,
+                        error: error.message
+                    });
+                }
+            }
+        });
+    </script>
+    <!-- ... (rest of body) ... -->
