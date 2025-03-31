@@ -20,4 +20,4 @@ other/
 # Add any other specific files or patterns you want to ignore below
 # e.g., sensitive_file.txt
 # e.g., *.tmp
-.*code-workspace
+*.code-workspace
