@@ -15,14 +15,17 @@ const uiModule = (() => {
     const closeEditorButton = document.getElementById('closeEditorButton');
     const saveDocButton = document.getElementById('saveDocButton');
     const versionListContainer = document.getElementById('versionListContainer'); // For versions
+    // New buttons for preview/revert flow
+    const confirmRevertButton = document.getElementById('confirmRevertButton');
+    const cancelPreviewButton = document.getElementById('cancelPreviewButton');
 
-    // Confirmation Dialog Elements
+    // Confirmation Dialog Elements (for Delete)
     const confirmDialog = document.getElementById('confirmDialog');
-    const confirmTitle = document.getElementById('confirmTitle');
-    const confirmMessage = document.getElementById('confirmMessage');
-    const confirmButton = document.getElementById('confirmButton');
-    const cancelButton = document.getElementById('cancelButton');
-    const closeConfirmButton = document.getElementById('closeConfirmButton');
+    // const confirmTitle = document.getElementById('confirmTitle'); // Managed inside showConfirmation
+    // const confirmMessage = document.getElementById('confirmMessage'); // Managed inside showConfirmation
+    // const confirmButton = document.getElementById('confirmButton'); // Managed inside showConfirmation
+    // const cancelButton = document.getElementById('cancelButton'); // Managed inside showConfirmation
+    // const closeConfirmButton = document.getElementById('closeConfirmButton'); // Managed inside showConfirmation
 
     let toastTimeout = null; // To manage the toast timer
 
@@ -83,27 +86,23 @@ const uiModule = (() => {
 
         let docsHtml = '';
         docs.forEach(doc => {
-            // Format timestamp (handle potential server timestamps)
             let updatedDateStr = 'N/A';
             if (doc.lastUpdated && doc.lastUpdated.toDate) {
                 updatedDateStr = doc.lastUpdated.toDate().toLocaleString();
             } else if (doc.lastUpdated) {
-                // Fallback if it's already a string or number? Adjust as needed.
                  try { updatedDateStr = new Date(doc.lastUpdated).toLocaleString(); } catch (e) {}
             }
 
             docsHtml += `
                 <div class="document-item" data-doc-id="${doc.id}">
                     <div class="document-info">
-                        <span class="document-title">${doc.title || 'Untitled Document'}</span>
+                        <span class="document-title">${escapeHtml(doc.title) || 'Untitled Document'}</span>
                         <span class="document-meta">Last updated: ${updatedDateStr}</span>
                     </div>
                     <div class="document-actions">
-                         <!-- Use specific class for delete -->
                         <button class="action-button delete-button" title="Delete Document" data-doc-id="${doc.id}" aria-label="Delete Document">
                             🗑️
                         </button>
-                         <!-- Edit button is implicit by clicking document-info -->
                     </div>
                 </div>
             `;
@@ -124,11 +123,14 @@ const uiModule = (() => {
 
         documentTitleInput.value = doc.title || '';
         documentContentInput.value = doc.content || '';
-        saveStatusSpan.textContent = ''; // Clear status on open
-        saveDocButton.disabled = false; // Ensure save is enabled
+
+        // Ensure normal editing state on open
+        setEditingState('normal'); // Set default state
 
         // Clear previous versions and show loading state
-        versionListContainer.innerHTML = '<p class="loading-versions">Loading versions...</p>';
+        if (versionListContainer) {
+             versionListContainer.innerHTML = '<p class="loading-versions">Loading versions...</p>';
+        }
 
         editorModal.classList.add('active');
         documentTitleInput.focus(); // Focus title input
@@ -143,7 +145,8 @@ const uiModule = (() => {
         // documentContentInput.value = '';
         // Clear versions list when closing
         if (versionListContainer) versionListContainer.innerHTML = '';
-        saveStatusSpan.textContent = ''; // Clear status
+        // Ensure state is reset on close
+        setEditingState('normal');
     }
 
     function setSaveStatus(status) {
@@ -152,15 +155,40 @@ const uiModule = (() => {
         }
     }
 
-    // --- NEW: Update Editor Content (e.g., after revert) ---
+    // Updates the editor fields (title and content)
     function updateEditorContent(title, content) {
          if(documentTitleInput) documentTitleInput.value = title;
          if(documentContentInput) documentContentInput.value = content;
-         // Optionally update status or clear it
-         // setSaveStatus('Reverted. Save if you wish to keep changes.');
     }
 
-    // --- NEW: Display Versions in Editor ---
+    // --- Manage Editor State (Normal vs Preview) ---
+    function setEditingState(state) {
+        // Ensure all required buttons exist before proceeding
+        if (!saveDocButton || !confirmRevertButton || !cancelPreviewButton || !saveStatusSpan) {
+             console.warn("Cannot set editing state: One or more required footer buttons/elements missing.");
+             return;
+        }
+
+        if (state === 'preview') {
+            saveDocButton.classList.add('hidden'); // Hide Save
+            confirmRevertButton.classList.remove('hidden'); // Show Confirm Revert
+            cancelPreviewButton.classList.remove('hidden'); // Show Cancel Preview
+            saveStatusSpan.textContent = 'Previewing previous version...';
+            // Optional: Make inputs read-only during preview
+            // if(documentTitleInput) documentTitleInput.readOnly = true;
+            // if(documentContentInput) documentContentInput.readOnly = true;
+        } else { // 'normal' or any other state defaults to normal editing
+            saveDocButton.classList.remove('hidden'); // Show Save
+            confirmRevertButton.classList.add('hidden'); // Hide Confirm Revert
+            cancelPreviewButton.classList.add('hidden'); // Hide Cancel Preview
+            saveStatusSpan.textContent = ''; // Clear status
+            // Ensure inputs are editable
+            // if(documentTitleInput) documentTitleInput.readOnly = false;
+            // if(documentContentInput) documentContentInput.readOnly = false;
+        }
+    }
+
+    // --- Display Versions in Editor (with "View" buttons) ---
     function displayVersions(versions) {
         if (!versionListContainer) return;
 
@@ -171,42 +199,26 @@ const uiModule = (() => {
 
         let versionsHtml = '<h4>Previous Versions:</h4><ul>';
         versions.forEach(version => {
-            // --- START: Modified Date Formatting ---
+            // Safely format timestamp using specified options
             let formattedDate = 'Unknown date';
             try {
                  if (version.timestamp && version.timestamp.toDate) {
                      const dateObj = version.timestamp.toDate();
-                     // Example: "Mar 30, 2024, 10:15 AM" - Adjust options as needed
-                     const options = {
-                         month: 'short', // e.g., 'Mar'
-                         day: 'numeric',   // e.g., '30'
-                         year: 'numeric', // e.g., '2024' (Optional, remove for shorter)
-                         hour: 'numeric',   // e.g., '10'
-                         minute: '2-digit', // e.g., '15'
-                         hour12: true      // Use AM/PM
-                     };
-                     formattedDate = dateObj.toLocaleString(undefined, options); // Use locale defaults
-
-                     // --- Alternative Shorter Format ---
-                     // const optionsShort = { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
-                     // formattedDate = dateObj.toLocaleTimeString(undefined, optionsShort);
-
-                 } else if (version.timestamp) {
-                     // Fallback for non-firestore timestamps (less likely)
-                     formattedDate = new Date(version.timestamp).toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+                     const options = { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
+                     formattedDate = dateObj.toLocaleString(undefined, options);
+                 } else if (version.timestamp) { // Fallback for non-firestore timestamps
+                     const options = { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12: true };
+                     formattedDate = new Date(version.timestamp).toLocaleString(undefined, options);
                  }
             } catch (e) { console.warn("Error formatting version date:", e); }
-            // --- END: Modified Date Formatting ---
 
-
-            // Use textContent to prevent XSS if title comes from user input
-            const safeTitle = version.title || 'Untitled';
+            // Use helper to escape title for safety
+            const safeTitle = escapeHtml(version.title) || 'Untitled';
 
             versionsHtml += `
                 <li class="version-item" data-version-id="${version.id}">
-                    <span class="version-timestamp" title="${escapeHtml(safeTitle)} - ${formattedDate}">${formattedDate}</span>
-                    <button class="button small secondary revert-button" data-version-id="${version.id}" aria-label="Revert to this version">Revert</button>
-                    <!-- Optional: Add a 'View' button later -->
+                    <span class="version-timestamp" title="${safeTitle} - ${formattedDate}">${formattedDate}</span>
+                    <button class="button small secondary view-version-button" data-version-id="${version.id}" aria-label="View this version">View</button>
                 </li>
             `;
         });
@@ -214,64 +226,48 @@ const uiModule = (() => {
         versionListContainer.innerHTML = versionsHtml;
     }
 
-    // --- Confirmation Dialog ---
+    // --- Confirmation Dialog (for Delete) ---
     function showConfirmation(title, message, onConfirmCallback) {
-        // Get references to the NON-replaced dialog elements first
-        const dialogContainer = document.getElementById('confirmDialog'); // Renamed for clarity
-        const titleElement = document.getElementById('confirmTitle');     // Renamed for clarity
-        const messageElement = document.getElementById('confirmMessage');   // Renamed for clarity
-
-        // **Crucial Change: Re-select buttons *inside* the function**
+        // Re-select elements each time to ensure they exist and handle potential replacements
+        const dialogContainer = document.getElementById('confirmDialog');
+        const titleElement = document.getElementById('confirmTitle');
+        const messageElement = document.getElementById('confirmMessage');
         const currentConfirmButton = document.getElementById('confirmButton');
         const currentCancelButton = document.getElementById('cancelButton');
-        const currentCloseButton = document.getElementById('closeConfirmButton'); // Renamed for clarity
+        const currentCloseButton = document.getElementById('closeConfirmButton');
 
-        // Check if ALL required elements exist *now*
         if (!dialogContainer || !titleElement || !messageElement || !currentConfirmButton || !currentCancelButton || !currentCloseButton) {
-            console.error("Confirmation dialog elements (or buttons) not found!");
-            // Maybe show a generic error toast if buttons are missing now
+            console.error("Confirmation dialog elements not found!");
             showToast("Error showing confirmation dialog.", true);
-            return; // Exit if any element is missing
+            return;
         }
 
-        // Update title and message
         titleElement.textContent = title;
         messageElement.textContent = message;
 
-        // --- Button Cloning and Listener Removal ---
-        // Clone the *currently active* buttons found above
+        // Button Cloning to remove old listeners
         const newConfirmButton = currentConfirmButton.cloneNode(true);
         currentConfirmButton.parentNode?.replaceChild(newConfirmButton, currentConfirmButton);
-
         const newCancelButton = currentCancelButton.cloneNode(true);
         currentCancelButton.parentNode?.replaceChild(newCancelButton, currentCancelButton);
-
         const newCloseButton = currentCloseButton.cloneNode(true);
         currentCloseButton.parentNode?.replaceChild(newCloseButton, currentCloseButton);
-        // --- End of Cloning ---
 
-        // --- Add New Listeners to the Cloned Buttons ---
-        const closeHandler = () => {
-            dialogContainer.classList.remove('active');
-        };
+        // Add new listeners
+        const closeHandler = () => dialogContainer.classList.remove('active');
 
         newConfirmButton.onclick = () => {
             closeHandler();
             if (typeof onConfirmCallback === 'function') {
-                try {
-                    onConfirmCallback();
-                } catch (e) {
+                try { onConfirmCallback(); } catch (e) {
                      console.error("Error executing confirmation callback:", e);
                      showToast("An error occurred performing the action.", true);
                 }
             }
         };
-
         newCancelButton.onclick = closeHandler;
-        newCloseButton.onclick = closeHandler; // Use the new variable name
-        // --- End of Listener Assignment ---
+        newCloseButton.onclick = closeHandler;
 
-        // Make the dialog visible
         dialogContainer.classList.add('active');
     }
 
@@ -301,6 +297,8 @@ const uiModule = (() => {
         setSaveStatus,
         updateEditorContent, // Expose function to update editor fields
         displayVersions,     // Expose function to show versions
-        showConfirmation
+        showConfirmation,    // Expose confirmation dialog helper
+        setEditingState      // Expose the new state manager
     };
 })();
+

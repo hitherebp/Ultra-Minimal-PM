@@ -58,7 +58,7 @@ body {
     white-space: nowrap; /* Prevent wrapping */
     overflow: hidden;
     text-overflow: ellipsis; /* Add ellipsis if too long */
-    max-width: 200px; /* Adjust as needed */
+    max-width: 300px; /* Adjust as needed */
 }
 
 /* ========================================
@@ -547,6 +547,8 @@ footer {
     /* Styles for the sidebar container */
     background-color: #f9f9f9;
     font-size: 13px;
+    padding: 10px;
+    width: 350px; /* Adjust as needed */
 }
 .version-history-sidebar h4 {
     margin-top: 0;
@@ -560,7 +562,7 @@ footer {
     margin: 0;
 }
 .version-item {
-    padding: 8px 5px;
+    padding: 4px 5px;
     border-bottom: 1px dashed #eee;
     display: flex;
     justify-content: space-between;
@@ -582,6 +584,7 @@ footer {
     overflow-wrap: break-word; /* Preferred property for breaking */
     /* You can add a little right margin if needed */
      margin-right: 5px; 
+     font-size: 12px;
 }
 .revert-button {
     /* Use existing .button.small.secondary styles */

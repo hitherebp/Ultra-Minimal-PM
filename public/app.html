@@ -47,14 +47,21 @@
                     <div class="modal-body" style="display: flex; gap: 15px;"> <!-- Use flex to arrange side-by-side -->
                         <textarea id="documentContent" placeholder="Start typing your document content here..." class="content-area" style="flex-grow: 1;"></textarea>
                         <!-- NEW: Version History Sidebar -->
-                        <aside id="versionListContainer" class="version-history-sidebar" style="width: 200px; border-left: 1px solid #eee; padding-left: 15px; overflow-y: auto;">
+                        <aside id="versionListContainer" class="version-history-sidebar">
                             <!-- Versions will be loaded here by ui.js -->
                             <p class="loading-versions">Loading versions...</p>
                         </aside>
                     </div>
                     <div class="modal-footer">
                         <span id="saveStatus" class="save-status"></span>
-                        <button id="saveDocButton" class="button primary">Save</button>
+                        <div> <!-- Wrap buttons for better layout if needed -->
+                            <!-- Initially hidden -->
+                            <button id="cancelPreviewButton" class="button secondary hidden">Cancel Preview</button>
+                            <!-- Initially hidden -->
+                            <button id="confirmRevertButton" class="button primary hidden">Confirm Revert</button>
+                            <!-- Shown by default -->
+                            <button id="saveDocButton" class="button primary">Save</button>
+                        </div>
                     </div>
                 </div>
 
@@ -67,11 +74,7 @@
                     </div>
                     <div class="modal-body">
                         <p id="confirmMessage">Are you sure?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button id="cancelButton" class="button secondary">Cancel</button>
-                        <button id="confirmButton" class="button danger">Confirm</button>
-                    </div>
+                    </div>                    
                 </div>
             </div>
 
