@@ -131,7 +131,12 @@ body {
     gap: 15px;
     justify-content: center;
 }
-
+/* ADD THIS RULE (adjust as needed) */
+#toggleVersionsButton {
+    margin-left: auto; /* Push it towards the right, before the close button */
+    margin-right: 10px; /* Add some space before the close button */
+    flex-shrink: 0; /* Prevent shrinking */
+}
 /* ========================================
    App Actions Bar (app.html)
    ======================================== */
@@ -549,6 +554,23 @@ footer {
     font-size: 13px;
     padding: 10px;
     width: 350px; /* Adjust as needed */
+    border-left: 1px solid #eee; /* Ensure these are here if you moved them */
+    overflow-y: auto;          /* Ensure these are here if you moved them */
+    /* ADD THIS TRANSITION */
+    transition: width 0.3s ease, height 0.3s ease, max-height 0.3s ease, 
+                padding 0.3s ease, border 0.3s ease, margin-top 0.3s ease, 
+                opacity 0.3s ease; 
+}
+/* ADD THIS ENTIRE RULE */
+.version-history-sidebar.collapsed {
+    width: 0 !important; /* Override width */
+    height: 0;
+    max-height: 0; /* Override mobile max-height */
+    padding: 0;
+    border: none; /* Remove all borders */
+    margin-top: 0; /* Remove mobile margin-top */
+    overflow: hidden; /* Hide content */
+    opacity: 0; /* Fade out */
 }
 .version-history-sidebar h4 {
     margin-top: 0;

@@ -15,6 +15,20 @@ const uiModule = (() => {
     const closeEditorButton = document.getElementById('closeEditorButton');
     const saveDocButton = document.getElementById('saveDocButton');
     const versionListContainer = document.getElementById('versionListContainer'); // For versions
+    const toggleVersionsButton = document.getElementById('toggleVersionsButton'); // New Button
+
+    // --- Initialize state of hide/view version button ---
+    if (toggleVersionsButton && versionListContainer) {
+        // 1. Ensure the sidebar is NOT collapsed when the modal opens
+        versionListContainer.classList.remove('collapsed'); 
+
+        // 2. Set the correct initial text/title for the button
+        toggleVersionsButton.textContent = 'Hide Versions'; 
+        toggleVersionsButton.title = 'Hide Versions Sidebar';
+    }
+    // --- End initialization ---
+
+
     // New buttons for preview/revert flow
     const confirmRevertButton = document.getElementById('confirmRevertButton');
     const cancelPreviewButton = document.getElementById('cancelPreviewButton');
@@ -149,6 +163,24 @@ const uiModule = (() => {
         setEditingState('normal');
     }
 
+    // Event listener
+    if (toggleVersionsButton && versionListContainer) {
+        toggleVersionsButton.addEventListener('click', () => {
+            versionListContainer.classList.toggle('collapsed');
+            
+            // Optional: Change button text based on state
+            if (versionListContainer.classList.contains('collapsed')) {
+                toggleVersionsButton.textContent = 'Show Versions';
+                toggleVersionsButton.title = 'Show Versions Sidebar';
+            } else {
+                toggleVersionsButton.textContent = 'Hide Versions'; // Or just 'Versions'
+                toggleVersionsButton.title = 'Hide Versions Sidebar';
+            }
+        });
+    } else {
+        console.error("Could not find toggle button or version list container elements.");
+    }
+    
     function setSaveStatus(status) {
         if (saveStatusSpan) {
             saveStatusSpan.textContent = status;
