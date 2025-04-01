@@ -131,12 +131,7 @@ body {
     gap: 15px;
     justify-content: center;
 }
-/* ADD THIS RULE (adjust as needed) */
-#toggleVersionsButton {
-    margin-left: auto; /* Push it towards the right, before the close button */
-    margin-right: 10px; /* Add some space before the close button */
-    flex-shrink: 0; /* Prevent shrinking */
-}
+
 /* ========================================
    App Actions Bar (app.html)
    ======================================== */
@@ -375,6 +370,22 @@ body {
     align-items: center;
     flex-shrink: 0; /* Prevent footer shrinking */
     background-color: #f9f9f9; /* Slightly different background for footer */
+}
+
+/* Preview Status */
+.preview-status {
+    padding: 8px 10px; /* Adjust padding */
+    margin-bottom: 8px; /* Space below message */
+    font-weight: bold;
+    color: #856404; /* Darker yellow/brown */
+    background-color: #fff3cd; /* Light yellow */
+    border: 1px solid #ffeeba; /* Yellow border */
+    border-radius: 4px;
+    text-align: center;
+}
+/* Ensure .hidden works */
+.preview-status.hidden {
+    display: none;
 }
 
 .save-status {
@@ -654,6 +665,21 @@ footer {
         margin-top: 15px;        /* Add space above the sidebar */
     }
 
+    .current-version-info {
+        padding: 8px 5px;        /* Consistent padding */
+        margin-bottom: 10px;     /* Space below it */
+        border-bottom: 1px solid #ccc; /* Separator */
+        font-size: 12px;         /* Match timestamp font size */
+        color: #333;            /* Standard text color */
+        font-style: italic;      /* Differentiate it slightly */
+    }
+    .current-version-info span.label { /* Optional style for a label like "Current:" */
+        font-weight: bold;
+        font-style: normal;
+        color: #555;
+        margin-right: 5px;
+    }
+
     /* Optional: Adjust textarea height if needed on mobile */
     .content-area {
         min-height: 250px; /* Slightly smaller min-height for mobile? */
@@ -676,6 +702,27 @@ footer {
         padding: 20px; /* Reduce padding on very small screens */
     }
     .modal-content {
-        /* Reduce padding slightly if needed */
+
     }
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); 
+    width: 100%; /* Keep this to ensure it fills space up to max-width */
+
+    /* CHANGE THIS VALUE */
+    /* max-width: 800px; */ /* Old value */
+    /* max-width: 1100px; */ /* New, wider value */ 
+    /* OR use a percentage/viewport unit: */
+     max-width: 85%;  
+    /* max-width: 80vw; */
+
+    max-height: 90vh; 
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; 
+    transform: scale(0.95); 
+    transition: transform 0.3s ease; 
 }

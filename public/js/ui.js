@@ -16,6 +16,10 @@ const uiModule = (() => {
     const saveDocButton = document.getElementById('saveDocButton');
     const versionListContainer = document.getElementById('versionListContainer'); // For versions
     const toggleVersionsButton = document.getElementById('toggleVersionsButton'); // New Button
+    const previewStatusMessage = document.getElementById('previewStatusMessage'); // Preview Status Message
+    const currentVersionInfo = document.getElementById('currentVersionInfo'); // Current Version Info
+
+
 
     // --- Initialize state of hide/view version button ---
     if (toggleVersionsButton && versionListContainer) {
@@ -128,26 +132,62 @@ const uiModule = (() => {
 
     // --- Editor Modal ---
     function openEditor(doc = { id: null, title: '', content: '' }) {
-        if (!editorModal || !documentTitleInput || !documentContentInput || !saveStatusSpan || !saveDocButton || !versionListContainer) {
+        // Ensure all required elements are present
+        if (!editorModal || !documentTitleInput || !documentContentInput || !saveStatusSpan || !saveDocButton || !versionListContainer || !currentVersionInfo) { // Added currentVersionInfo check
              console.error("Editor elements not found!");
+             showToast("Error opening editor.", true); // Inform user
              return;
         }
+        
         // Store current doc id using a data attribute on the modal itself
         editorModal.dataset.docId = doc.id || '';
 
+        // Set initial content
         documentTitleInput.value = doc.title || '';
         documentContentInput.value = doc.content || '';
 
-        // Ensure normal editing state on open
-        setEditingState('normal'); // Set default state
-
-        // Clear previous versions and show loading state
-        if (versionListContainer) {
-             versionListContainer.innerHTML = '<p class="loading-versions">Loading versions...</p>';
+        // --- ADDED: LOGIC FOR CURRENT VERSION INFO ---
+        if (currentVersionInfo) { // Check if the element exists
+            let currentTimestampStr = 'N/A (New Document)'; // Default for new docs
+            if (doc.lastUpdated) { // Check if lastUpdated exists
+                try {
+                    // Handle both Firestore Timestamps and standard Date objects/strings
+                    const dateObj = doc.lastUpdated.toDate ? doc.lastUpdated.toDate() : new Date(doc.lastUpdated);
+                    // Define formatting options
+                    const options = { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
+                    // Format the date
+                    currentTimestampStr = dateObj.toLocaleString(undefined, options);
+                } catch (e) {
+                    console.warn("Error formatting current doc date:", e);
+                    currentTimestampStr = 'Invalid Date'; // Fallback on error
+                }
+            }
+            // Update the HTML of the placeholder div
+            currentVersionInfo.innerHTML = `<span class="label">Current:</span> ${escapeHtml(currentTimestampStr)}`; // Use escapeHtml for safety
+        } else {
+            console.warn("currentVersionInfo element not found"); // Log if element is missing
         }
+        // --- END OF ADDED LOGIC ---
 
+        // Ensure normal editing state on open
+        setEditingState('normal'); // Set default state (shows Save, hides Revert/Cancel, enables inputs)
+
+        // Clear previous versions list and show loading state
+        if (versionListContainer) {
+             versionListContainer.innerHTML = '<p class="loading-versions">Loading versions...</p>'; // Clear old versions
+        }
+        
+        // --- ADDED: Initialize toggle button state ---
+        if (toggleVersionsButton && versionListContainer) {
+            versionListContainer.classList.remove('collapsed'); // Ensure sidebar is expanded
+            toggleVersionsButton.textContent = 'Hide Versions'; // Set correct button text
+            toggleVersionsButton.title = 'Hide Versions Sidebar'; // Set correct tooltip
+        }
+        // --- END of toggle button init ---
+
+        // Show the modal
         editorModal.classList.add('active');
-        documentTitleInput.focus(); // Focus title input
+        documentTitleInput.focus(); // Focus title input for convenience
     }
 
     function closeEditor() {
@@ -194,29 +234,62 @@ const uiModule = (() => {
     }
 
     // --- Manage Editor State (Normal vs Preview) ---
-    function setEditingState(state) {
-        // Ensure all required buttons exist before proceeding
-        if (!saveDocButton || !confirmRevertButton || !cancelPreviewButton || !saveStatusSpan) {
-             console.warn("Cannot set editing state: One or more required footer buttons/elements missing.");
-             return;
+    function setEditingState(state, previewTimestamp = null) { 
+        // Ensure all required elements exist before proceeding
+        if (!saveDocButton || !confirmRevertButton || !cancelPreviewButton || !saveStatusSpan || !previewStatusMessage || !documentContentInput) {
+            console.warn("Cannot set editing state: One or more required elements missing.");
+            return;
         }
 
         if (state === 'preview') {
-            saveDocButton.classList.add('hidden'); // Hide Save
+            // --- Entering Preview Mode ---
+            saveDocButton.classList.add('hidden');          // Hide Save
             confirmRevertButton.classList.remove('hidden'); // Show Confirm Revert
             cancelPreviewButton.classList.remove('hidden'); // Show Cancel Preview
-            saveStatusSpan.textContent = 'Previewing previous version...';
-            // Optional: Make inputs read-only during preview
-            // if(documentTitleInput) documentTitleInput.readOnly = true;
-            // if(documentContentInput) documentContentInput.readOnly = true;
-        } else { // 'normal' or any other state defaults to normal editing
+            
+            // --- MODIFIED: Format timestamp and set message ---
+            let statusText = 'Previewing previous version';
+            if (previewTimestamp) { // Check if timestamp was passed
+                try {
+                    const dateObj = previewTimestamp.toDate ? previewTimestamp.toDate() : new Date(previewTimestamp);
+                    const options = { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
+                    const formattedDate = dateObj.toLocaleString(undefined, options);
+                    statusText += `: ${escapeHtml(formattedDate)}`; // Append formatted date
+                } catch (e) {
+                    console.warn("Error formatting preview timestamp:", e);
+                    statusText += ' (date unavailable)'; // Fallback
+                }
+            }
+            previewStatusMessage.textContent = statusText; // Set the combined text
+            // --- END OF MODIFICATION ---
+            
+
+
+            previewStatusMessage.classList.remove('hidden');
+            saveStatusSpan.textContent = ''; // Clear the old status span
+
+            // Disable editing
+            saveDocButton.disabled = true; 
+            documentContentInput.disabled = true; 
+            // Optional: Make title read-only too?
+            // if(documentTitleInput) documentTitleInput.disabled = true; 
+
+        } else { 
+            // --- Exiting Preview Mode ('normal' state) ---
             saveDocButton.classList.remove('hidden'); // Show Save
             confirmRevertButton.classList.add('hidden'); // Hide Confirm Revert
             cancelPreviewButton.classList.add('hidden'); // Hide Cancel Preview
-            saveStatusSpan.textContent = ''; // Clear status
-            // Ensure inputs are editable
-            // if(documentTitleInput) documentTitleInput.readOnly = false;
-            // if(documentContentInput) documentContentInput.readOnly = false;
+
+            // Hide and clear the new status message
+            previewStatusMessage.classList.add('hidden');
+            previewStatusMessage.textContent = '';
+            saveStatusSpan.textContent = ''; // Ensure old status is clear
+
+            // Re-enable editing
+            saveDocButton.disabled = false;
+            documentContentInput.disabled = false;
+            // Optional: Re-enable title if you disabled it
+            // if(documentTitleInput) documentTitleInput.disabled = false;
         }
     }
 
@@ -317,6 +390,33 @@ const uiModule = (() => {
              .replace(/'/g, "&#039;");   // Replace ' with &#039; (safer entity)
      }
 
+     // --- NEW FUNCTION for updating the current version timestamp display. ---
+    function updateCurrentVersionTimestamp(timestamp) {
+        if (!currentVersionInfo) { // Check if the element exists
+            console.warn("updateCurrentVersionTimestamp: currentVersionInfo element not found");
+            return; 
+        }
+        
+        let currentTimestampStr = 'N/A'; // Default
+        if (timestamp) { // Check if timestamp was provided
+            try {
+                // Handle both Firestore Timestamps and standard Date objects/strings
+                const dateObj = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+                // Define formatting options (same as in openEditor)
+                const options = { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
+                // Format the date
+                currentTimestampStr = dateObj.toLocaleString(undefined, options);
+            } catch (e) {
+                console.warn("Error formatting timestamp in updateCurrentVersionTimestamp:", e);
+                currentTimestampStr = 'Invalid Date'; // Fallback on error
+            }
+        }
+        // Update the HTML of the placeholder div
+        currentVersionInfo.innerHTML = `<span class="label">Current:</span> ${escapeHtml(currentTimestampStr)}`; // Use escapeHtml for safety
+    }
+    // --- END OF NEW FUNCTION ---
+
+
     // --- Public API ---
     return {
         showToast,
@@ -330,7 +430,9 @@ const uiModule = (() => {
         updateEditorContent, // Expose function to update editor fields
         displayVersions,     // Expose function to show versions
         showConfirmation,    // Expose confirmation dialog helper
-        setEditingState      // Expose the new state manager
+        setEditingState,      // Expose the new state manager
+        updateCurrentVersionTimestamp // <-- Exposure current version time stamp
+
     };
 })();
 

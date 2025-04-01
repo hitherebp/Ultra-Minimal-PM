@@ -110,7 +110,12 @@ const documentsModule = (() => {
             // 5. Commit the batch
             await batch.commit();
             console.log(`Document ${docId} saved, version created, old versions trimmed.`);
-            return true;
+            
+            // --- ADDED: Fetch and return the updated document data ---
+            const updatedDocData = await getDocument(docId); // Fetch the doc again
+            return updatedDocData; // Return the object { id, title, content, lastUpdated, ... }
+            // --- END OF ADDED CODE ---
+
 
         } catch (error) {
             console.error("Error saving document with versioning:", error);

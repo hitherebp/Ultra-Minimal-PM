@@ -229,13 +229,27 @@ document.addEventListener('DOMContentLoaded', () => {
         saveDocButton.disabled = true;
         uiModule.setSaveStatus('Saving...');
         try {
-            await documentsModule.saveDocument(currentUser.uid, docId, title, content);
+            // --- MODIFIED LINE: Capture the result ---
+            // Assuming saveDocument now returns { ..., lastUpdated: newTimestamp } or just newTimestamp
+            const saveResult = await documentsModule.saveDocument(currentUser.uid, docId, title, content); 
+            
+            // --- ADDED LINE: Update the current version display ---
+            // Adjust based on what saveDocument actually returns (e.g., saveResult.lastUpdated or just saveResult)
+            if (saveResult && saveResult.lastUpdated) { 
+                 uiModule.updateCurrentVersionTimestamp(saveResult.lastUpdated); 
+            } else {
+                 console.warn("Save successful, but couldn't get updated timestamp to update UI.");
+                 // Optionally, try fetching the doc again here to get the timestamp
+            }
+    
             uiModule.setSaveStatus('Saved!');
             uiModule.showToast('Document saved successfully.');
             loadUserDocuments(); // Refresh list
+            
             // Refresh versions list in editor
             const versions = await documentsModule.getVersions(docId);
             uiModule.displayVersions(versions);
+    
         } catch (error) {
             console.error('Error saving document:', error);
             uiModule.showToast(`Failed to save document: ${error.message}`, true);
@@ -291,7 +305,11 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const versionData = await documentsModule.getVersionById(docId, versionId);
             uiModule.updateEditorContent(versionData.title, versionData.content); // Load preview
-            uiModule.setEditingState('preview'); // Switch UI
+
+            // --- MODIFIED LINE: Pass the timestamp ---
+            uiModule.setEditingState('preview', versionData.timestamp); // Pass timestamp here
+            // --- END OF MODIFICATION ---
+            
         } catch (error) {
             console.error("Error fetching version for preview:", error);
             uiModule.showToast("Failed to load version preview.", true);

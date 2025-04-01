@@ -42,26 +42,47 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <input type="text" id="documentTitle" placeholder="Document Title" class="title-input">
-                        <button id="toggleVersionsButton" class="button small secondary" title="Toggle Versions Sidebar">Versions</button> 
                         <button id="closeEditorButton" class="close-button" aria-label="Close editor">×</button>
                     </div>
-                    <div class="modal-body" style="display: flex; gap: 15px;"> <!-- Use flex to arrange side-by-side -->
-                        <textarea id="documentContent" placeholder="Start typing your document content here..." class="content-area" style="flex-grow: 1;"></textarea>
-                        <!-- NEW: Version History Sidebar -->
+                    <div class="modal-body" style="display: flex; gap: 15px;"> 
+                        <!-- Wrapper for text area and its status message -->
+                        <div style="flex-grow: 1; display: flex; flex-direction: column;"> 
+                            <!-- New element for the preview status message -->
+                            <div id="previewStatusMessage" class="preview-status hidden"> 
+                                <!-- Content set via JS -->
+                            </div>
+                            
+                            <!-- Existing Text Area -->
+                            <textarea id="documentContent" placeholder="Start typing your document content here..." class="content-area"></textarea> 
+                        </div>
+                        
+                        <!-- Existing Sidebar -->
                         <aside id="versionListContainer" class="version-history-sidebar">
-                            <!-- Versions will be loaded here by ui.js -->
-                            <p class="loading-versions">Loading versions...</p>
+                            <!-- ADD THIS DIV -->
+                            <div id="currentVersionInfo" class="current-version-info">
+                                <!-- Content will be populated by JavaScript -->
+                                <span>Loading current version...</span> 
+                            </div>
+                        
+                            <!-- Existing content (loading message or version list) starts here -->
+                            <p class="loading-versions">Loading versions...</p> 
+                            <!-- OR <h4>Previous Versions:</h4><ul>...</ul> -->
                         </aside>
                     </div>
+                    
                     <div class="modal-footer">
-                        <span id="saveStatus" class="save-status"></span>
-                        <div> <!-- Wrap buttons for better layout if needed -->
-                            <!-- Initially hidden -->
+                        <!-- Group 1: Left-aligned items -->
+                        <div style="display: flex; align-items: center; gap: 10px;"> 
+                            <button id="saveDocButton" class="button primary">Save</button> 
+                            <span id="saveStatus" class="save-status"></span> 
+                            <!-- Cancel/Confirm buttons moved here -->
                             <button id="cancelPreviewButton" class="button secondary hidden">Cancel Preview</button>
-                            <!-- Initially hidden -->
                             <button id="confirmRevertButton" class="button primary hidden">Confirm Revert</button>
-                            <!-- Shown by default -->
-                            <button id="saveDocButton" class="button primary">Save</button>
+                        </div>
+                    
+                        <!-- Group 2: Right-aligned items (now only Toggle button) -->
+                        <div style="display: flex; align-items: center; gap: 10px;"> 
+                            <button id="toggleVersionsButton" class="button small secondary" title="Toggle Versions Sidebar">Hide Versions</button> 
                         </div>
                     </div>
                 </div>
