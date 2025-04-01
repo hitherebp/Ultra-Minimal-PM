@@ -171,15 +171,32 @@ const uiModule = (() => {
 
         let versionsHtml = '<h4>Previous Versions:</h4><ul>';
         versions.forEach(version => {
-            // Safely format timestamp
+            // --- START: Modified Date Formatting ---
             let formattedDate = 'Unknown date';
             try {
                  if (version.timestamp && version.timestamp.toDate) {
-                     formattedDate = version.timestamp.toDate().toLocaleString();
+                     const dateObj = version.timestamp.toDate();
+                     // Example: "Mar 30, 2024, 10:15 AM" - Adjust options as needed
+                     const options = {
+                         month: 'short', // e.g., 'Mar'
+                         day: 'numeric',   // e.g., '30'
+                         year: 'numeric', // e.g., '2024' (Optional, remove for shorter)
+                         hour: 'numeric',   // e.g., '10'
+                         minute: '2-digit', // e.g., '15'
+                         hour12: true      // Use AM/PM
+                     };
+                     formattedDate = dateObj.toLocaleString(undefined, options); // Use locale defaults
+
+                     // --- Alternative Shorter Format ---
+                     // const optionsShort = { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
+                     // formattedDate = dateObj.toLocaleTimeString(undefined, optionsShort);
+
                  } else if (version.timestamp) {
-                     formattedDate = new Date(version.timestamp).toLocaleString();
+                     // Fallback for non-firestore timestamps (less likely)
+                     formattedDate = new Date(version.timestamp).toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
                  }
             } catch (e) { console.warn("Error formatting version date:", e); }
+            // --- END: Modified Date Formatting ---
 
 
             // Use textContent to prevent XSS if title comes from user input
@@ -187,7 +204,7 @@ const uiModule = (() => {
 
             versionsHtml += `
                 <li class="version-item" data-version-id="${version.id}">
-                    <span class="version-timestamp" title="${escapeHtml(safeTitle)}">${formattedDate}</span>
+                    <span class="version-timestamp" title="${escapeHtml(safeTitle)} - ${formattedDate}">${formattedDate}</span>
                     <button class="button small secondary revert-button" data-version-id="${version.id}" aria-label="Revert to this version">Revert</button>
                     <!-- Optional: Add a 'View' button later -->
                 </li>
@@ -199,53 +216,77 @@ const uiModule = (() => {
 
     // --- Confirmation Dialog ---
     function showConfirmation(title, message, onConfirmCallback) {
-        if (!confirmDialog || !confirmTitle || !confirmMessage || !confirmButton || !cancelButton || !closeConfirmButton) {
-            console.error("Confirmation dialog elements not found!");
-            return;
+        // Get references to the NON-replaced dialog elements first
+        const dialogContainer = document.getElementById('confirmDialog'); // Renamed for clarity
+        const titleElement = document.getElementById('confirmTitle');     // Renamed for clarity
+        const messageElement = document.getElementById('confirmMessage');   // Renamed for clarity
+
+        // **Crucial Change: Re-select buttons *inside* the function**
+        const currentConfirmButton = document.getElementById('confirmButton');
+        const currentCancelButton = document.getElementById('cancelButton');
+        const currentCloseButton = document.getElementById('closeConfirmButton'); // Renamed for clarity
+
+        // Check if ALL required elements exist *now*
+        if (!dialogContainer || !titleElement || !messageElement || !currentConfirmButton || !currentCancelButton || !currentCloseButton) {
+            console.error("Confirmation dialog elements (or buttons) not found!");
+            // Maybe show a generic error toast if buttons are missing now
+            showToast("Error showing confirmation dialog.", true);
+            return; // Exit if any element is missing
         }
 
-        confirmTitle.textContent = title;
-        confirmMessage.textContent = message;
+        // Update title and message
+        titleElement.textContent = title;
+        messageElement.textContent = message;
 
-        // Important: Remove previous listeners to avoid multiple executions
-        const newConfirmButton = confirmButton.cloneNode(true);
-        confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
-        //confirmButton = newConfirmButton; // Update reference if needed globally, though direct assignment below is fine
+        // --- Button Cloning and Listener Removal ---
+        // Clone the *currently active* buttons found above
+        const newConfirmButton = currentConfirmButton.cloneNode(true);
+        currentConfirmButton.parentNode?.replaceChild(newConfirmButton, currentConfirmButton);
 
-        const newCancelButton = cancelButton.cloneNode(true);
-        cancelButton.parentNode.replaceChild(newCancelButton, cancelButton);
-        //cancelButton = newCancelButton;
+        const newCancelButton = currentCancelButton.cloneNode(true);
+        currentCancelButton.parentNode?.replaceChild(newCancelButton, currentCancelButton);
 
-         const newCloseConfirmButton = closeConfirmButton.cloneNode(true);
-        closeConfirmButton.parentNode.replaceChild(newCloseConfirmButton, closeConfirmButton);
-        //closeConfirmButton = newCloseConfirmButton;
+        const newCloseButton = currentCloseButton.cloneNode(true);
+        currentCloseButton.parentNode?.replaceChild(newCloseButton, currentCloseButton);
+        // --- End of Cloning ---
 
-
-        // Add new listeners
-        const closeHandler = () => confirmDialog.classList.remove('active');
+        // --- Add New Listeners to the Cloned Buttons ---
+        const closeHandler = () => {
+            dialogContainer.classList.remove('active');
+        };
 
         newConfirmButton.onclick = () => {
             closeHandler();
             if (typeof onConfirmCallback === 'function') {
-                onConfirmCallback();
+                try {
+                    onConfirmCallback();
+                } catch (e) {
+                     console.error("Error executing confirmation callback:", e);
+                     showToast("An error occurred performing the action.", true);
+                }
             }
         };
+
         newCancelButton.onclick = closeHandler;
-        newCloseConfirmButton.onclick = closeHandler;
+        newCloseButton.onclick = closeHandler; // Use the new variable name
+        // --- End of Listener Assignment ---
 
-
-        confirmDialog.classList.add('active');
+        // Make the dialog visible
+        dialogContainer.classList.add('active');
     }
 
     // --- Utility: Simple HTML Escaping ---
     function escapeHtml(unsafe) {
-        if (!unsafe) return '';
-        return unsafe
-             .replace(/&/g, "&")
-             .replace(/</g, "<")
-             .replace(/>/g, ">")
-             .replace(/"/g, """)
-             .replace(/'/g, "'");
+        // Ensure input is a string
+        const str = String(unsafe || '');
+
+        // Perform the replacements using the correct entities in strings
+        return str
+             .replace(/&/g, "&amp;")     // Replace & with &amp;
+             .replace(/</g, "&lt;")      // Replace < with &lt;
+             .replace(/>/g, "&gt;")      // Replace > with &gt;
+             .replace(/"/g, "&quot;")   // Replace " with &quot;
+             .replace(/'/g, "&#039;");   // Replace ' with &#039; (safer entity)
      }
 
     // --- Public API ---

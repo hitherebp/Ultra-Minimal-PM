@@ -3,6 +3,8 @@
 const documentsModule = (() => {
     // Assume db is initialized firebase.firestore() instance (likely in app.js or auth.js)
     let db;
+    const MAX_VERSIONS = 5; // <<< Maximum number of versions to retain
+
 
     function init(firestoreInstance) {
         db = firestoreInstance;
@@ -61,8 +63,7 @@ const documentsModule = (() => {
 
         const docRef = getDocRef(docId);
         const versionsRef = getVersionsRef(docId);
-        const MAX_VERSIONS = 5; // Keep 5 previous versions + current
-
+        
         try {
             // Use a transaction or batched write for atomicity
             const batch = db.batch();
@@ -173,8 +174,6 @@ const documentsModule = (() => {
          const docRef = getDocRef(docId);
          const versionRef = getVersionsRef(docId).doc(versionId);
          const versionsRef = getVersionsRef(docId); // Needed for trimming later
-         const MAX_VERSIONS = 5;
-
          try {
              const batch = db.batch();
 

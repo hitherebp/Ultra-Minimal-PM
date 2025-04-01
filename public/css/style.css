@@ -570,13 +570,18 @@ footer {
 .version-item:last-child {
     border-bottom: none;
 }
+
 .version-timestamp {
     color: #333;
     cursor: default; /* Or make it viewable */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex-grow: 1; /* Take up space */
+    /* white-space: nowrap;   <-- REMOVE this line */
+    /* overflow: hidden;      <-- REMOVE this line */
+    /* text-overflow: ellipsis; <-- REMOVE this line */
+    /* flex-grow: 1;          <-- REMOVE this line (let button take needed space) */
+    word-break: break-word; /* Allow breaking long words if needed, though unlikely for dates */
+    overflow-wrap: break-word; /* Preferred property for breaking */
+    /* You can add a little right margin if needed */
+     margin-right: 5px; 
 }
 .revert-button {
     /* Use existing .button.small.secondary styles */
@@ -595,4 +600,57 @@ footer {
    ======================================== */
 .hidden {
     display: none !important; /* Force hide */
+}
+
+
+
+/* ========================================
+   Responsive Adjustments
+   ======================================== */
+
+/* Target screens smaller than, say, 768px (adjust breakpoint as needed) */
+@media (max-width: 768px) {
+
+    /* Stack modal body items vertically */
+    .modal-body {
+        flex-direction: column;
+        gap: 20px; /* Adjust gap for vertical stacking */
+    }
+
+    /* Make version sidebar full width below textarea */
+    .version-history-sidebar {
+        width: 100%;             /* Take full width */
+        max-height: 200px;       /* Limit height to prevent excessive scrolling */
+        overflow-y: auto;        /* Ensure scrolling within the sidebar */
+        border-left: none;       /* Remove the side border */
+        border-top: 1px solid #eee; /* Add a top border separator */
+        padding-left: 0;         /* Remove left padding */
+        padding-top: 15px;       /* Add some top padding */
+        margin-top: 15px;        /* Add space above the sidebar */
+    }
+
+    /* Optional: Adjust textarea height if needed on mobile */
+    .content-area {
+        min-height: 250px; /* Slightly smaller min-height for mobile? */
+    }
+
+    /* Ensure document list items have space on mobile */
+    .document-item {
+        flex-wrap: wrap; /* Allow actions to wrap below info */
+        gap: 10px;
+    }
+    .document-actions {
+        width: 100%; /* Make actions take full width if they wrap */
+        justify-content: flex-end; /* Align actions to the right */
+    }
+}
+
+/* Optional: Even smaller breakpoint for very narrow screens if needed */
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 20px; /* Reduce padding on very small screens */
+    }
+    .modal-content {
+        /* Reduce padding slightly if needed */
+    }
 }
